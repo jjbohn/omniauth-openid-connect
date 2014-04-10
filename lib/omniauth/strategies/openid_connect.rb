@@ -66,6 +66,9 @@ module OmniAuth
         client.redirect_uri = client_options.redirect_uri
         client.authorization_code = authorization_code
         access_token
+
+        env["REQUEST_METHOD"] = "POST" # force POST
+
         super
       end
 
