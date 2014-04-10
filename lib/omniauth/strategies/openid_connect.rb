@@ -95,7 +95,7 @@ module OmniAuth
       end
 
       def access_token
-        @access_token ||= client.access_token!(:client_auth_method => client_auth_method)
+        @access_token ||= client.access_token!(:client_auth_method => options.client_auth_method)
       end
 
       def authorize_uri
@@ -106,7 +106,7 @@ module OmniAuth
           scope: options.scope,
           nonce: nonce
         }
-        opts.delete(:nonce) unless send_nonce
+        opts.delete(:nonce) unless options.send_nonce
 
         client.authorization_uri(opts)
       end
