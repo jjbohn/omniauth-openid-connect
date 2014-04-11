@@ -30,6 +30,8 @@ module OmniAuth
       option :id_token_hint
       option :login_hint
       option :acr_values
+      option :client_auth_method
+      option :send_nonce, true
 
       uid { user_info.sub }
 
@@ -47,7 +49,7 @@ module OmniAuth
       end
 
       extra do
-        { raw_info: user_info.as_json } # UserInfo#as_json actually returns a hash
+        { raw_info: fix_user_info(user_info).as_json } # UserInfo#as_json actually returns a hash
       end
 
       credentials do
@@ -66,6 +68,7 @@ module OmniAuth
         client.redirect_uri = client_options.redirect_uri
         client.authorization_code = authorization_code
         access_token
+
         super
       end
 
@@ -79,17 +82,30 @@ module OmniAuth
         @user_info ||= access_token.userinfo!
       end
 
+      ##
+      # Google sends the string "true" as the value for the field 'email_verified' while a boolean is expected.
+      def fix_user_info(user_info)
+        if user_info.email_verified.is_a? String
+          user_info.email_verified = (user_info.email_verified == "true")
+        end
+        user_info
+      end
+
       def access_token
-        @access_token ||= client.access_token!
+        @access_token ||= client.access_token!(:client_auth_method => options.client_auth_method)
       end
 
       def authorize_uri
         client.redirect_uri = client_options.redirect_uri
-        client.authorization_uri(
+
+        opts = {
           response_type: options.response_type,
           scope: options.scope,
-          nonce: nonce,
-        )
+          nonce: nonce
+        }
+        opts.delete(:nonce) unless options.send_nonce
+
+        client.authorization_uri(opts)
       end
 
       def client_options
