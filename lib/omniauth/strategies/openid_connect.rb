@@ -30,9 +30,8 @@ module OmniAuth
       option :id_token_hint
       option :login_hint
       option :acr_values
-      option :client_auth_method # openid_connect default is :basic, pass :not_basic for google
-      option :send_nonce, true # google doesn't accept nonces, pass false in that case
-      option :callback_request_method
+      option :client_auth_method
+      option :send_nonce, true
 
       uid { user_info.sub }
 
@@ -69,8 +68,6 @@ module OmniAuth
         client.redirect_uri = client_options.redirect_uri
         client.authorization_code = authorization_code
         access_token
-
-        env["REQUEST_METHOD"] = options.callback_request_method.to_s.upcase if options.callback_request_method
 
         super
       end
