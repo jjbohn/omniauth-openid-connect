@@ -22,6 +22,7 @@ module OmniAuth
         userinfo_endpoint: "/userinfo",
         jwks_uri: '/jwk'
       }
+      option :name, :openid_connect
       option :issuer
       option :discovery, false
       option :client_signing_alg
@@ -126,7 +127,7 @@ module OmniAuth
       end
 
       def public_key
-        if options.discover
+        if options.discovery
           config.public_keys.first
         else
           key_or_secret
