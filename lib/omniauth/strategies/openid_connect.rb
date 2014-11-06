@@ -77,6 +77,10 @@ module OmniAuth
       end
 
       def config
+        uri = URI.parse(options.issuer)
+        if uri.scheme == 'http'
+          SWD.url_builder = URI::HTTP
+        end
         @config ||= ::OpenIDConnect::Discovery::Provider::Config.discover!(options.issuer)
       end
 
