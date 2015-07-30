@@ -58,6 +58,8 @@ Configuration details:
   If provider does not have Webfinger endpoint, You can specify "Issuer" to option.  
   e.g. `issuer: "myprovider.com"`  
   It means to get configuration from "https://myprovider.com/.well-known/openid-configuration".
+  * `authorization_opts` if you want to pass custom authorization options
+  e.g. `{:'openid.realm' => "..."}`
 
 For the full low down on OpenID Connect, please check out
 [the spec](http://openid.net/specs/openid-connect-core-1_0.html).

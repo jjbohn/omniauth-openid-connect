@@ -323,4 +323,10 @@ class OmniAuth::Strategies::OpenIDConnectTest < StrategyTestCase
     strategy.options.client_signing_alg = :HS256
     assert_equal strategy.options.client_options.secret, strategy.public_key
   end
+
+  def test_option_authorization_opts
+    strategy.options.client_options[:host] = "example.com"
+    strategy.options.authorization_opts = {:'openid.realm' => 'realm'}
+    assert(strategy.authorize_uri =~ /^https:\/\/example\.com\/authorize\?client_id=1234&nonce=[\w\d]{32}&openid\.realm=realm&response_type=code&scope=openid&state=[\w\d]{32}$/, "URI must contain openid.realm")
+  end
 end

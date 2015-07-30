@@ -40,6 +40,7 @@ module OmniAuth
       option :acr_values
       option :send_nonce, true
       option :client_auth_method
+      option :authorization_opts, {}
 
       uid { user_info.sub }
 
@@ -116,12 +117,13 @@ module OmniAuth
 
       def authorize_uri
         client.redirect_uri = client_options.redirect_uri
-        opts = {
+        # to_hash as authorization_opts is a Hashi::mash causing dup query keys
+        opts = options.authorization_opts.to_hash.merge({
             response_type: options.response_type,
             scope: options.scope,
             state: new_state,
             nonce: (new_nonce if options.send_nonce),
-        }
+        })
         client.authorization_uri(opts.reject{|k,v| v.nil?})
       end
 
