@@ -125,11 +125,11 @@ module OmniAuth
         client.authorization_uri(opts.reject{|k,v| v.nil?})
       end
 
-      def public_key
+      def public_keys
         if options.discovery
-          config.public_keys.first
+          config.public_keys_hash
         else
-          key_or_secret
+          [{:kid => nil, :key => key_or_secret}]
         end
       end
 
@@ -168,7 +168,7 @@ module OmniAuth
       end
 
       def decode_id_token(id_token)
-        ::OpenIDConnect::ResponseObject::IdToken.decode(id_token, public_key)
+        ::OpenIDConnect::ResponseObject::IdToken.decode_with_keys(id_token, public_keys)
       end
 
 
