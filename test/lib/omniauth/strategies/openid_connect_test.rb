@@ -57,7 +57,7 @@ class OmniAuth::Strategies::OpenIDConnectTest < StrategyTestCase
 
     id_token = stub('OpenIDConnect::ResponseObject::IdToken')
     id_token.stubs(:verify!).with({:issuer => strategy.options.issuer, :client_id => @identifier, :nonce => nonce}).returns(true)
-    ::OpenIDConnect::ResponseObject::IdToken.stubs(:decode).returns(id_token)
+    ::OpenIDConnect::ResponseObject::IdToken.stubs(:decode_with_keys).returns(id_token)
 
     strategy.unstub(:user_info)
     access_token = stub('OpenIDConnect::AccessToken')
@@ -93,12 +93,12 @@ class OmniAuth::Strategies::OpenIDConnectTest < StrategyTestCase
     config.stubs(:token_endpoint).returns('https://example.com/token')
     config.stubs(:userinfo_endpoint).returns('https://example.com/userinfo')
     config.stubs(:jwks_uri).returns('https://example.com/jwks')
-    config.stubs(:public_keys).returns([public_key])
+    config.stubs(:public_keys_hash).returns([{:kid => nil, :key => public_key}])
     ::OpenIDConnect::Discovery::Provider::Config.stubs(:discover!).with('https://example.com/').returns(config)
 
     id_token = stub('OpenIDConnect::ResponseObject::IdToken')
     id_token.stubs(:verify!).with({:issuer => 'https://example.com/', :client_id => @identifier, :nonce => nonce}).returns(true)
-    ::OpenIDConnect::ResponseObject::IdToken.stubs(:decode).returns(id_token)
+    ::OpenIDConnect::ResponseObject::IdToken.stubs(:decode_with_keys).returns(id_token)
 
     strategy.unstub(:user_info)
     access_token = stub('OpenIDConnect::AccessToken')
@@ -207,7 +207,7 @@ class OmniAuth::Strategies::OpenIDConnectTest < StrategyTestCase
 
     id_token = stub('OpenIDConnect::ResponseObject::IdToken')
     id_token.stubs(:verify!).returns(true)
-    ::OpenIDConnect::ResponseObject::IdToken.stubs(:decode).returns(id_token)
+    ::OpenIDConnect::ResponseObject::IdToken.stubs(:decode_with_keys).returns(id_token)
 
     access_token = stub('OpenIDConnect::AccessToken')
     access_token.stubs(:access_token).returns(SecureRandom.hex(16))
@@ -295,7 +295,7 @@ class OmniAuth::Strategies::OpenIDConnectTest < StrategyTestCase
 
     id_token = stub('OpenIDConnect::ResponseObject::IdToken')
     id_token.stubs(:verify!).with({:issuer => strategy.options.issuer, :client_id => @identifier, :nonce => nonce}).returns(true)
-    ::OpenIDConnect::ResponseObject::IdToken.stubs(:decode).returns(id_token)
+    ::OpenIDConnect::ResponseObject::IdToken.stubs(:decode_with_keys).returns(id_token)
 
     HTTPClient.any_instance.stubs(:post).with(
       "#{opts.scheme}://#{opts.host}:#{opts.port}#{opts.token_endpoint}",
@@ -309,18 +309,28 @@ class OmniAuth::Strategies::OpenIDConnectTest < StrategyTestCase
   def test_public_key_with_jwk
     strategy.options.client_signing_alg = :RS256
     strategy.options.client_jwk_signing_key = File.read('./test/fixtures/jwks.json')
-    assert_equal OpenSSL::PKey::RSA, strategy.public_key.class
+    assert_equal Array, strategy.public_keys.class
+    assert_equal Hash, strategy.public_keys[0].class
+    assert_equal nil, strategy.public_keys[0][:kid]
+    assert_equal OpenSSL::PKey::RSA, strategy.public_keys[0][:key].class
+
   end
 
   def test_public_key_with_x509
     strategy.options.client_signing_alg = :RS256
     strategy.options.client_x509_signing_key = File.read('./test/fixtures/test.crt')
-    assert_equal OpenSSL::PKey::RSA, strategy.public_key.class
+    assert_equal Array, strategy.public_keys.class
+    assert_equal Hash, strategy.public_keys[0].class
+    assert_equal nil, strategy.public_keys[0][:kid]
+    assert_equal OpenSSL::PKey::RSA, strategy.public_keys[0][:key].class
   end
 
   def test_public_key_with_hmac
     strategy.options.client_options.secret = 'secret'
     strategy.options.client_signing_alg = :HS256
-    assert_equal strategy.options.client_options.secret, strategy.public_key
+    assert_equal Array, strategy.public_keys.class
+    assert_equal Hash, strategy.public_keys[0].class
+    assert_equal nil, strategy.public_keys[0][:kid]
+    assert_equal strategy.options.client_options.secret, strategy.public_keys[0][:key]
   end
 end
