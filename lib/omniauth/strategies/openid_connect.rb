@@ -127,7 +127,7 @@ module OmniAuth
 
       def public_key
         if options.discovery
-          config.public_keys.first
+          config.jwks
         else
           key_or_secret
         end
