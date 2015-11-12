@@ -176,7 +176,13 @@ module OmniAuth
           end
           ::OpenIDConnect::ResponseObject::IdToken.decode(id_token, keys[header[:kid]])
         else
-          ::OpenIDConnect::ResponseObject::IdToken.decode(id_token, public_key)
+          case public_key.class
+            when JSON::JWK::Set
+              jwk = JSON::JWK.new(public_key.first)
+              ::OpenIDConnect::ResponseObject::IdToken.decode(id_token, jwk.to_key)
+            else
+              ::OpenIDConnect::ResponseObject::IdToken.decode(id_token, public_key)
+          end
         end
       end
 
