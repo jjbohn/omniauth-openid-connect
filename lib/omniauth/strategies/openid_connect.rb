@@ -168,7 +168,7 @@ module OmniAuth
       end
 
       def decode_id_token(id_token)
-        header = JSON.parse(Base64.decode64(id_token.split('.').first))
+        header = JSON.parse(UrlSafeBase64.decode64(id_token.split('.').first))
         if header.has_key?('kid')
           keys = public_key.inject({}) do |keys, jwk|
             key = JSON::JWK.new(jwk)
