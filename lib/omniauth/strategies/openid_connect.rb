@@ -60,7 +60,10 @@ module OmniAuth
       end
 
       extra do
-        {raw_info: user_info.raw_attributes}
+        {
+          raw_info: user_info.raw_attributes,
+          id_token: id_token.raw_attributes
+        }
       end
 
       credentials do
@@ -174,6 +177,9 @@ module OmniAuth
         ::OpenIDConnect::ResponseObject::IdToken.decode(id_token, public_key)
       end
 
+      def id_token
+        decode_id_token(access_token.id_token)
+      end
 
       def client_options
         options.client_options
