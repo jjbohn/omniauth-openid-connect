@@ -16,12 +16,13 @@ module OmniAuth
         redirect_uri: nil,
         scheme: "https",
         host: nil,
-        port: 443,
+        port: nil,
         authorization_endpoint: "/authorize",
         token_endpoint: "/token",
         userinfo_endpoint: "/userinfo",
         jwks_uri: '/jwk'
       }
+      option :client_name, "a web application via omniauth-openid-connect" # in case of dynamic registration
       option :issuer
       option :discovery, false
       option :client_signing_alg
@@ -74,7 +75,16 @@ module OmniAuth
       end
 
       def client
-        @client ||= ::OpenIDConnect::Client.new(client_options)
+        @client ||= \
+          if client_options.identifier.nil?
+            registrar.register!.tap do |client|
+              %i(authorization_endpoint token_endpoint userinfo_endpoint).each do |key|
+                client.send :"#{key}=", client_options[key]
+              end
+            end
+          else
+             ::OpenIDConnect::Client.new(client_options)
+          end
       end
 
       def config
@@ -82,6 +92,10 @@ module OmniAuth
       end
 
       def request_phase
+        if client_options.scheme == "http"
+          WebFinger.url_builder = URI::HTTP
+          SWD.url_builder = URI::HTTP
+        end
         options.issuer = issuer if options.issuer.blank?
         discover! if options.discovery
         redirect authorize_uri
@@ -137,6 +151,13 @@ module OmniAuth
       end
 
       private
+
+      def registrar
+        ::OpenIDConnect::Client::Registrar.new(config.registration_endpoint).tap do |registrar|
+          registrar.redirect_uris = *client_options.redirect_uri
+          registrar.client_name = options.client_name
+        end
+      end
 
       def issuer
         resource = "#{client_options.scheme}://#{client_options.host}" + ((client_options.port) ? ":#{client_options.port.to_s}" : '')
