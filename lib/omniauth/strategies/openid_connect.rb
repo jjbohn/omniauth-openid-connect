@@ -151,7 +151,14 @@ module OmniAuth
       end
 
       def user_info
-        @user_info ||= access_token.userinfo!
+        @user_info ||= begin
+          _user_info = access_token.userinfo!
+          if id_token.sub.eql? _user_info.sub
+            _user_info
+          else
+            ::OpenIDConnect::ResponseObject::UserInfo.new(sub: '😶', warning: 'UserInfo subject does not match ID Token subject. Discard UserInfo response.')
+          end
+        end
       end
 
       def access_token
@@ -160,14 +167,18 @@ module OmniAuth
           scope: (options.scope if options.send_scope_to_token_endpoint),
           client_auth_method: options.client_auth_method
           )
-          _id_token = decode_id_token _access_token.id_token
-          _id_token.verify!(
+          @id_token = decode_id_token _access_token.id_token
+          @id_token.verify!(
               issuer: options.issuer,
               client_id: client_options.identifier,
               nonce: stored_nonce
           )
           _access_token
         }.call()
+      end
+
+      def id_token
+        @id_token
       end
 
       def decode_id_token(id_token)

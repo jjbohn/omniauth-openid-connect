@@ -59,6 +59,7 @@ class OmniAuth::Strategies::OpenIDConnectTest < StrategyTestCase
 
     id_token = stub('OpenIDConnect::ResponseObject::IdToken')
     id_token.stubs(:verify!).with({:issuer => strategy.options.issuer, :client_id => @identifier, :nonce => nonce}).returns(true)
+    id_token.stubs(:sub).returns(user_info.sub)
     ::OpenIDConnect::ResponseObject::IdToken.stubs(:decode).returns(id_token)
 
     strategy.unstub(:user_info)
@@ -102,6 +103,7 @@ class OmniAuth::Strategies::OpenIDConnectTest < StrategyTestCase
 
     id_token = stub('OpenIDConnect::ResponseObject::IdToken')
     id_token.stubs(:verify!).with({:issuer => 'https://example.com/', :client_id => @identifier, :nonce => nonce}).returns(true)
+    id_token.stubs(:sub).returns(user_info.sub)
     ::OpenIDConnect::ResponseObject::IdToken.stubs(:decode).returns(id_token)
 
     strategy.unstub(:user_info)
@@ -189,6 +191,7 @@ class OmniAuth::Strategies::OpenIDConnectTest < StrategyTestCase
   end
 
   def test_info
+    user_info.sub
     info = strategy.info
     assert_equal user_info.name, info[:name]
     assert_equal user_info.email, info[:email]
@@ -199,6 +202,60 @@ class OmniAuth::Strategies::OpenIDConnectTest < StrategyTestCase
     assert_equal user_info.picture, info[:image]
     assert_equal user_info.phone_number, info[:phone]
     assert_equal({ website: user_info.website }, info[:urls])
+  end
+
+  def test_info_when_subject_does_not_match_id_token_subject
+    code = SecureRandom.hex(16)
+    state = SecureRandom.hex(16)
+    nonce = SecureRandom.hex(16)
+    request.stubs(:params).returns({'code' => code,'state' => state})
+    request.stubs(:path_info).returns('')
+
+    strategy.options.issuer = 'example.com'
+    strategy.options.client_signing_alg = :RS256
+    strategy.options.client_jwk_signing_key = File.read('test/fixtures/jwks.json')
+
+    id_token = stub('OpenIDConnect::ResponseObject::IdToken')
+    id_token.stubs(:verify!).with({:issuer => strategy.options.issuer, :client_id => @identifier, :nonce => nonce}).returns(true)
+    id_token.stubs(:sub).returns(user_info.sub)
+    ::OpenIDConnect::ResponseObject::IdToken.stubs(:decode).returns(id_token)
+
+    strategy.unstub(:user_info)
+    access_token = stub('OpenIDConnect::AccessToken')
+    access_token.stubs(:access_token)
+    access_token.stubs(:refresh_token)
+    access_token.stubs(:expires_in)
+    access_token.stubs(:scope)
+    access_token.stubs(:id_token).returns(File.read('test/fixtures/id_token.txt'))
+    client.expects(:access_token!).at_least_once.returns(access_token)
+    _user_info = OpenIDConnect::ResponseObject::UserInfo.new(
+      sub: SecureRandom.hex(16),
+      name: Faker::Name.name,
+      email: Faker::Internet.email,
+      nickname: Faker::Name.first_name,
+      preferred_username: Faker::Internet.user_name,
+      given_name: Faker::Name.first_name,
+      family_name: Faker::Name.last_name,
+      gender: 'female',
+      picture: Faker::Internet.url + ".png",
+      phone_number: Faker::PhoneNumber.phone_number,
+      website: Faker::Internet.url,
+    )
+    access_token.expects(:userinfo!).returns(_user_info)
+
+    strategy.call!({'rack.session' => {'omniauth.state' => state, 'omniauth.nonce' => nonce}})
+
+    info = strategy.info
+    assert_equal nil, info[:name]
+    assert_equal nil, info[:email]
+    assert_equal nil, info[:nickname]
+    assert_equal nil, info[:first_name]
+    assert_equal nil, info[:last_name]
+    assert_equal nil, info[:gender]
+    assert_equal nil, info[:image]
+    assert_equal nil, info[:phone]
+    assert_equal({ website: nil }, info[:urls])
+    assert_equal({ raw_info: {sub: "😶", warning: "UserInfo subject does not match ID Token subject. Discard UserInfo response."}}, strategy.extra)
   end
 
   def test_extra
