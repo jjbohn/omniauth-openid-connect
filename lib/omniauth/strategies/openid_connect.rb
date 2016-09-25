@@ -161,24 +161,28 @@ module OmniAuth
         end
       end
 
-      def access_token
-        @access_token ||= begin
+      def access_and_id_tokens
+        @tokens ||= begin
           _access_token = client.access_token!(
           scope: (options.scope if options.send_scope_to_token_endpoint),
           client_auth_method: options.client_auth_method
           )
-          @id_token = decode_id_token _access_token.id_token
-          @id_token.verify!(
+          _id_token = decode_id_token _access_token.id_token
+          _id_token.verify!(
               issuer: options.issuer,
               client_id: client_options.identifier,
               nonce: stored_nonce
           )
-          _access_token
+          [_access_token, _id_token]
         end
       end
 
+      def access_token
+        @access_token ||= access_and_id_tokens[0]
+      end
+
       def id_token
-        @id_token
+        @id_token ||= access_and_id_tokens[1]
       end
 
       def decode_id_token(id_token)
