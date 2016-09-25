@@ -162,7 +162,7 @@ module OmniAuth
       end
 
       def access_token
-        @access_token ||= lambda {
+        @access_token ||= begin
           _access_token = client.access_token!(
           scope: (options.scope if options.send_scope_to_token_endpoint),
           client_auth_method: options.client_auth_method
@@ -174,7 +174,7 @@ module OmniAuth
               nonce: stored_nonce
           )
           _access_token
-        }.call()
+        end
       end
 
       def id_token
