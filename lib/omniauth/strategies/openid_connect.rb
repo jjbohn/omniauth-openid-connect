@@ -43,7 +43,7 @@ module OmniAuth
       option :send_scope_to_token_endpoint, true
       option :client_auth_method
 
-      uid { user_info.sub }
+      uid { id_token.sub }
 
       info do
         {
