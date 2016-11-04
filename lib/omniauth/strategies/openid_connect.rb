@@ -81,6 +81,8 @@ module OmniAuth
               %i(authorization_endpoint token_endpoint userinfo_endpoint).each do |key|
                 client.send :"#{key}=", client_options[key]
               end
+              client_options.identifier = client.identifier
+              client_options.secret = client.secret
             end
           else
              ::OpenIDConnect::Client.new(client_options)
