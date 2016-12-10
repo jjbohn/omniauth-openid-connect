@@ -45,6 +45,7 @@ module OmniAuth
       option :send_nonce, true
       option :send_scope_to_token_endpoint, true
       option :client_auth_method
+      option :allowed_gsuite_domains, []
 
       uid { user_info.sub }
 
@@ -128,6 +129,12 @@ module OmniAuth
             nonce: (new_nonce if options.send_nonce),
             hd: options.hd,
         }
+
+        # Add the hd parameter for GSuite if we haven't already defined it
+        opts[:hd] ||= options.allowed_gsuite_domains.first if options.allowed_gsuite_domains.length == 1
+        opts[:hd] ||= "*" if options.allowed_gsuite_domains.length > 1
+
+        puts client.authorization_uri(opts.reject{|k,v| v.nil?})
         client.authorization_uri(opts.reject{|k,v| v.nil?})
       end
 
@@ -169,6 +176,9 @@ module OmniAuth
               client_id: client_options.identifier,
               nonce: stored_nonce
           )
+          unless options.allowed_gsuite_domains.empty?
+            raise "Invalid GSuite Domain" unless options.allowed_gsuite_domains.include?(_id_token.raw_attributes['hd'])
+          end
           _access_token
         }.call()
       end
