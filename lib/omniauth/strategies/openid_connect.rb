@@ -10,6 +10,9 @@ module OmniAuth
     class OpenIDConnect
       include OmniAuth::Strategy
 
+      # Default name (to support Devise better)
+      option :name, 'openid_connect'
+
       option :client_options, {
         identifier: nil,
         secret: nil,
@@ -201,7 +204,7 @@ module OmniAuth
       end
 
       def key_or_secret
-        case options.client_signing_alg
+        case options.client_signing_alg.to_sym
           when :HS256, :HS384, :HS512
             return client_options.secret
           when :RS256, :RS384, :RS512
