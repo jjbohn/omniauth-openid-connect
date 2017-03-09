@@ -1,0 +1,5 @@
+---
+ruby_version: ruby-2.2.5
+bundler_version: 1.13.2                  # IMPORTANT: set ruby bundler version to use
+environment:
+  RAILS_LOG_LEVEL: '2'
