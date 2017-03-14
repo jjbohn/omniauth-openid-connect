@@ -89,11 +89,13 @@ module OmniAuth
 
       def callback_phase
         error = request.params['error_reason'] || request.params['error']
+        original_omniauth_state = session['omniauth.state']
+
         if error
           raise CallbackError.new(request.params['error'], request.params['error_description'] || request.params['error_reason'], request.params['error_uri'])
         elsif request.params['state'].to_s.empty? || request.params['state'] != stored_state
           #return Rack::Response.new(['401 Unauthorized'], 401).finish
-          raise StateError, "Invalid state: #{request.params['state']} (stored state: #{stored_state})"
+          raise StateError, "Invalid state: #{request.params['state']} (original state: #{original_omniauth_state})"
         elsif !request.params["code"]
           return fail!(:missing_code, OmniAuth::OpenIDConnect::MissingCodeError.new(request.params["error"]))
         else
@@ -102,7 +104,6 @@ module OmniAuth
           client.redirect_uri = client_options.redirect_uri
           client.authorization_code = authorization_code
           access_token
-          session.delete('omniauth.state')
           super
         end
       rescue CallbackError => e
@@ -191,7 +192,7 @@ module OmniAuth
       end
 
       def stored_state
-        session['omniauth.state']
+        session.delete('omniauth.state')
       end
 
       def new_nonce
