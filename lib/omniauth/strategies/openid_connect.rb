@@ -127,6 +127,7 @@ module OmniAuth
             scope: options.scope,
             state: new_state,
             nonce: (new_nonce if options.send_nonce),
+            prompt: options.prompt,
             hd: options.hd,
         }
 
