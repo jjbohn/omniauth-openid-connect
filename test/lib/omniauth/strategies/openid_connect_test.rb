@@ -242,6 +242,13 @@ class OmniAuth::Strategies::OpenIDConnectTest < StrategyTestCase
     assert(!(strategy.authorize_uri =~ /nonce=/), "URI must not contain nonce")
   end
 
+  def test_option_prompt
+    strategy.options.client_options[:host] = "foobar.com"
+
+    strategy.options.prompt = "login"
+    assert(strategy.authorize_uri =~ /prompt=login/, "URI must contain prompt")
+  end
+
   def test_failure_endpoint_redirect
     OmniAuth.config.stubs(:failure_raise_out_environments).returns([])
     strategy.stubs(:env).returns({})
