@@ -125,6 +125,7 @@ module OmniAuth
             nonce: (new_nonce if options.send_nonce),
             hd: options.hd,
             prompt: options.prompt,
+            id_token_hint: options.id_token_hint,
         }
         client.authorization_uri(opts.reject{|k,v| v.nil?})
       end
