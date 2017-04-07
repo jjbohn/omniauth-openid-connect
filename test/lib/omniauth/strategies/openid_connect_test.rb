@@ -42,6 +42,34 @@ class OmniAuth::Strategies::OpenIDConnectTest < StrategyTestCase
     assert_equal strategy.options.client_options.jwks_uri, 'https://example.com/jwks'
   end
 
+  def test_request_phase_with_prompt
+    expected_redirect = /^https:\/\/example\.com\/authorize\?client_id=1234&nonce=[\w\d]{32}&prompt=login%2Cselect_account&response_type=code&scope=openid&state=[\w\d]{32}$/
+    strategy.options.prompt = 'login,select_account'
+    strategy.options.issuer = 'example.com'
+    strategy.options.client_options.host = 'example.com'
+    strategy.expects(:redirect).with(regexp_matches(expected_redirect))
+    strategy.request_phase
+  end
+
+  def test_request_phase_with_prompt_and_id_token_hint
+    expected_redirect = /^https:\/\/example\.com\/authorize\?client_id=1234&id_token_hint=insert_valid_id_token_here&nonce=[\w\d]{32}&prompt=login&response_type=code&scope=openid&state=[\w\d]{32}$/
+    strategy.options.prompt = 'login'
+    strategy.options.id_token_hint = 'insert_valid_id_token_here'
+    strategy.options.issuer = 'example.com'
+    strategy.options.client_options.host = 'example.com'
+    strategy.expects(:redirect).with(regexp_matches(expected_redirect))
+    strategy.request_phase
+  end
+
+  def test_request_phase_with_ux
+    expected_redirect = /^https:\/\/example\.com\/authorize\?client_id=1234&nonce=[\w\d]{32}&response_type=code&scope=openid&state=[\w\d]{32}&ux=signup%2Ccustom_message$/
+    strategy.options.ux = 'signup,custom_message'
+    strategy.options.issuer = 'example.com'
+    strategy.options.client_options.host = 'example.com'
+    strategy.expects(:redirect).with(regexp_matches(expected_redirect))
+    strategy.request_phase
+  end
+
   def test_uid
     assert_equal user_info.sub, strategy.uid
   end
@@ -240,20 +268,6 @@ class OmniAuth::Strategies::OpenIDConnectTest < StrategyTestCase
 
     strategy.options.send_nonce = false
     assert(!(strategy.authorize_uri =~ /nonce=/), "URI must not contain nonce")
-  end
-
-  def test_option_prompt
-    strategy.options.client_options[:host] = "foobar.com"
-
-    strategy.options.prompt = "login"
-    assert(strategy.authorize_uri =~ /prompt=login/, "URI must contain prompt")
-  end
-
-  def test_option_prompt
-    strategy.options.client_options[:host] = "foobar.com"
-
-    strategy.options.id_token_hint = "2983049820398423"
-    assert(strategy.authorize_uri =~ /id_token_hint=2983049820398423/, "URI must contain id_token_hint")
   end
 
   def test_failure_endpoint_redirect
