@@ -42,6 +42,7 @@ module OmniAuth
       option :send_nonce, true
       option :send_scope_to_token_endpoint, true
       option :client_auth_method
+      option :ux
 
       uid { user_info.sub }
 
@@ -126,6 +127,7 @@ module OmniAuth
             hd: options.hd,
             prompt: options.prompt,
             id_token_hint: options.id_token_hint,
+            ux: options.ux,
         }
         client.authorization_uri(opts.reject{|k,v| v.nil?})
       end
