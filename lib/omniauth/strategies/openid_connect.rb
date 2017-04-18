@@ -127,6 +127,7 @@ module OmniAuth
             hd: options.hd,
             prompt: options.prompt,
             id_token_hint: options.id_token_hint,
+            login_hint: options.login_hint,
             ux: options.ux,
         }
         client.authorization_uri(opts.reject{|k,v| v.nil?})
