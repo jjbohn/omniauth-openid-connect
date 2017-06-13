@@ -1,0 +1,15 @@
+---
+name: omniauth-shopify
+up:
+  - ruby: 2.3.1
+  - bundler
+commands:
+  test:
+    syntax:
+      argument: file
+      optional: args...
+    desc: run tests
+    run: bundle exec rspec
+  doc:
+    desc: Build YARD documentation in doc/
+    run: bundle exec yard
