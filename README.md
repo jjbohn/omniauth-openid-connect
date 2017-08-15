@@ -1,3 +1,5 @@
+# This project is no longer maintained. Please see https://github.com/m0n9oose/omniauth_openid_connect for a maintained version.
+
 # OmniAuth::OpenIDConnect
 
 OpenID Connect strategy for OmniAuth
