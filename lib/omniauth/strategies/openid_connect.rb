@@ -42,8 +42,11 @@ module OmniAuth
       option :send_nonce, true
       option :send_scope_to_token_endpoint, true
       option :client_auth_method
+      option :uid_field, 'sub'
 
-      uid { user_info.sub }
+      uid do
+          user_info.send(options.uid_field.to_s)
+      end
 
       info do
         {
