@@ -242,6 +242,16 @@ class OmniAuth::Strategies::OpenIDConnectTest < StrategyTestCase
     assert(!(strategy.authorize_uri =~ /nonce=/), "URI must not contain nonce")
   end
 
+  def test_option_acr_values
+    strategy.options.client_options[:host] = 'foobar.com'
+
+    assert(!(strategy.authorize_uri =~ /acr_values=/), 'URI must not contain acr_values')
+
+    strategy.options.acr_values = 'urn:mace:incommon:iap:silver'
+    assert(strategy.authorize_uri =~ /acr_values=/, 'URI must contain acr_values')
+  end
+
+
   def test_failure_endpoint_redirect
     OmniAuth.config.stubs(:failure_raise_out_environments).returns([])
     strategy.stubs(:env).returns({})
