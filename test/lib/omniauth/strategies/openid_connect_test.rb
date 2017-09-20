@@ -59,6 +59,7 @@ class OmniAuth::Strategies::OpenIDConnectTest < StrategyTestCase
 
     id_token = stub('OpenIDConnect::ResponseObject::IdToken')
     id_token.stubs(:verify!).with({:issuer => strategy.options.issuer, :client_id => @identifier, :nonce => nonce}).returns(true)
+    id_token.stubs(:raw_attributes)
     ::OpenIDConnect::ResponseObject::IdToken.stubs(:decode).returns(id_token)
 
     strategy.unstub(:user_info)
@@ -102,6 +103,7 @@ class OmniAuth::Strategies::OpenIDConnectTest < StrategyTestCase
 
     id_token = stub('OpenIDConnect::ResponseObject::IdToken')
     id_token.stubs(:verify!).with({:issuer => 'https://example.com/', :client_id => @identifier, :nonce => nonce}).returns(true)
+    id_token.stubs(:raw_attributes)
     ::OpenIDConnect::ResponseObject::IdToken.stubs(:decode).returns(id_token)
 
     strategy.unstub(:user_info)
@@ -202,7 +204,23 @@ class OmniAuth::Strategies::OpenIDConnectTest < StrategyTestCase
   end
 
   def test_extra
-    assert_equal({ raw_info: user_info.as_json }, strategy.extra)
+    id_token = stub('OpenIDConnect::ResponseObject::IdToken')
+    id_token.stubs(:verify!).returns(true)
+    id_token.stubs(:raw_attributes).returns(iss: 'https://example.com', sub: 'sub123')
+    ::OpenIDConnect::ResponseObject::IdToken.stubs(:decode).returns(id_token)
+
+    access_token = stub('OpenIDConnect::AccessToken')
+    access_token.stubs(:id_token)
+    client.expects(:access_token!).returns(access_token)
+
+    extra = {
+      raw_info: user_info.as_json,
+      id_token: {
+        iss: 'https://example.com',
+        sub: 'sub123'
+      }
+    }
+    assert_equal(extra, strategy.extra)
   end
 
   def test_credentials
@@ -212,6 +230,7 @@ class OmniAuth::Strategies::OpenIDConnectTest < StrategyTestCase
 
     id_token = stub('OpenIDConnect::ResponseObject::IdToken')
     id_token.stubs(:verify!).returns(true)
+    id_token.stubs(:raw_attributes)
     ::OpenIDConnect::ResponseObject::IdToken.stubs(:decode).returns(id_token)
 
     access_token = stub('OpenIDConnect::AccessToken')
@@ -302,6 +321,7 @@ class OmniAuth::Strategies::OpenIDConnectTest < StrategyTestCase
 
     id_token = stub('OpenIDConnect::ResponseObject::IdToken')
     id_token.stubs(:verify!).with({:issuer => strategy.options.issuer, :client_id => @identifier, :nonce => nonce}).returns(true)
+    id_token.stubs(:raw_attributes)
     ::OpenIDConnect::ResponseObject::IdToken.stubs(:decode).returns(id_token)
 
     HTTPClient.any_instance.stubs(:post).with(
