@@ -242,6 +242,18 @@ class OmniAuth::Strategies::OpenIDConnectTest < StrategyTestCase
     assert(!(strategy.authorize_uri =~ /nonce=/), "URI must not contain nonce")
   end
 
+  def test_option_claims
+    strategy.options.client_options[:host] = 'foobar.com'
+
+    assert(!(strategy.authorize_uri =~ /claims=/), 'URI must not contain claims')
+
+    strategy.options.claims = {}
+    assert(strategy.authorize_uri =~ /claims=/, 'URI must contain claims')
+
+    strategy.options.claims = { looks_like_json: true }
+    assert(strategy.authorize_uri =~ /claims=%7B%22looks_like_json%22%3Atrue%7D/, 'claims should be formatted as JSON')
+  end
+
   def test_failure_endpoint_redirect
     OmniAuth.config.stubs(:failure_raise_out_environments).returns([])
     strategy.stubs(:env).returns({})

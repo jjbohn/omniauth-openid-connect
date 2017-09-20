@@ -60,6 +60,26 @@ Configuration details:
   If provider does not have Webfinger endpoint, You can specify "Issuer" to option.  
   e.g. `issuer: "https://myprovider.com"`  
   It means to get configuration from "https://myprovider.com/.well-known/openid-configuration".
+  * Supports requesting Claims using the `claims` Request Parameter
+    (http://openid.net/specs/openid-connect-core-1_0.html#ClaimsParameter).
+    Example configuration:
+    ```ruby
+    config.omniauth :openid_connect, {
+      name: :my_provider,
+      claims: {
+        id_token: {
+          acr: {
+            essential: true,
+            values: ['urn:mace:incommon:iap:silver', 'urn:mace:incommon:iap:bronze']
+          }
+        }
+        userinfo: {
+          email_verified:         { essential: true },
+          email:                  { essential: true }
+        }
+      },
+      ...
+    ```
 
 For the full low down on OpenID Connect, please check out
 [the spec](http://openid.net/specs/openid-connect-core-1_0.html).
