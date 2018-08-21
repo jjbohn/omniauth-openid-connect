@@ -179,7 +179,7 @@ module OmniAuth
 
       def decode_id_token(id_token)
         Rails.logger.info "id_token: #{id_token} | public_key: #{public_key}"
-        ::OpenIDConnect::ResponseObject::IdToken.decode(id_token, public_key.first)
+        ::OpenIDConnect::ResponseObject::IdToken.decode(id_token, public_key.last)
       end
 
 
