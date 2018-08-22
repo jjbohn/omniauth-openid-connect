@@ -136,8 +136,6 @@ module OmniAuth
       end
 
       def public_key
-        Rails.logger.info "options.client_signing_alg: #{options.client_signing_alg}"
-        Rails.logger.info "options.discovery: #{options.discovery} | config.jwks: #{config.jwks}"
         if options.discovery
           config.jwks
         else
