@@ -136,6 +136,8 @@ module OmniAuth
       end
 
       def public_key
+        Rails.logger.info "options.client_signing_alg: #{options.client_signing_alg}"
+        Rails.logger.info "options.discovery: #{options.discovery} | config.jwks: #{config.jwks}"
         if options.discovery
           config.jwks
         else
@@ -178,8 +180,7 @@ module OmniAuth
       end
 
       def decode_id_token(id_token)
-        Rails.logger.info "id_token: #{id_token} | public_key: #{public_key}"
-        ::OpenIDConnect::ResponseObject::IdToken.decode(id_token, public_key.last)
+        ::OpenIDConnect::ResponseObject::IdToken.decode(id_token, public_key)
       end
 
 
