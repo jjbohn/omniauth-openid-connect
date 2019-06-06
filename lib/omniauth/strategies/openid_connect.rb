@@ -89,10 +89,13 @@ module OmniAuth
 
       def callback_phase
         error = request.params['error_reason'] || request.params['error']
+        original_omniauth_state = session['omniauth.state']
+
         if error
           raise CallbackError.new(request.params['error'], request.params['error_description'] || request.params['error_reason'], request.params['error_uri'])
         elsif request.params['state'].to_s.empty? || request.params['state'] != stored_state
-          return Rack::Response.new(['401 Unauthorized'], 401).finish
+          #return Rack::Response.new(['401 Unauthorized'], 401).finish
+          raise StateError, "Invalid state: #{request.params['state']} (original state: #{original_omniauth_state})"
         elsif !request.params["code"]
           return fail!(:missing_code, OmniAuth::OpenIDConnect::MissingCodeError.new(request.params["error"]))
         else
@@ -109,6 +112,8 @@ module OmniAuth
         fail!(:timeout, e)
       rescue ::SocketError => e
         fail!(:failed_to_connect, e)
+      rescue StateError => e
+        fail!(:state_error, e)
       end
 
 
@@ -124,6 +129,8 @@ module OmniAuth
             state: new_state,
             nonce: (new_nonce if options.send_nonce),
             hd: options.hd,
+            login_hint: options.login_hint,
+            acr_values: options.acr_values
         }
         client.authorization_uri(opts.reject{|k,v| v.nil?})
       end
@@ -171,6 +178,7 @@ module OmniAuth
       end
 
       def decode_id_token(id_token)
+        Rails.logger.info "id_token: #{id_token} | public_key: #{public_key}"
         ::OpenIDConnect::ResponseObject::IdToken.decode(id_token, public_key)
       end
 
@@ -244,6 +252,8 @@ module OmniAuth
           [error, error_reason, error_uri].compact.join(' | ')
         end
       end
+
+      class StateError < StandardError; end
     end
   end
 end

@@ -9,9 +9,11 @@ class OmniAuth::Strategies::OpenIDConnectTest < StrategyTestCase
   end
 
   def test_request_phase
-    expected_redirect = /^https:\/\/example\.com\/authorize\?client_id=1234&nonce=[\w\d]{32}&response_type=code&scope=openid&state=[\w\d]{32}$/
+    expected_redirect = /^https:\/\/example\.com\/authorize\?acr_values=authorize%3A1&client_id=1234&login_hint=example%40example.com&nonce=[\w\d]{32}&response_type=code&scope=openid&state=[\w\d]{32}$/
     strategy.options.issuer = 'example.com'
     strategy.options.client_options.host = 'example.com'
+    strategy.options.login_hint = 'example@example.com'
+    strategy.options.acr_values = 'authorize:1'
     strategy.expects(:redirect).with(regexp_matches(expected_redirect))
     strategy.request_phase
   end
@@ -139,8 +141,10 @@ class OmniAuth::Strategies::OpenIDConnectTest < StrategyTestCase
     strategy.call!({'rack.session' => {'omniauth.state' => state, 'omniauth.nonce' => nonce}})
     result = strategy.callback_phase
 
-    assert result.kind_of?(Array)
-    assert result.first == 401, "Expecting unauthorized"
+    #assert result.kind_of?(Array)
+    #assert result.first == 401, "Expecting unauthorized"
+    strategy.expects(:fail!)
+    strategy.callback_phase
   end
 
   def test_callback_phase_with_timeout
@@ -275,8 +279,10 @@ class OmniAuth::Strategies::OpenIDConnectTest < StrategyTestCase
 
     result = strategy.callback_phase
 
-    assert result.kind_of?(Array)
-    assert result.first == 401, "Expecting unauthorized"
+    #assert result.kind_of?(Array)
+    #assert result.first == 401, "Expecting unauthorized"
+    strategy.expects(:fail!)
+    strategy.callback_phase
   end
 
   def test_option_client_auth_method
