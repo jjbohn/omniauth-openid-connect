@@ -8,7 +8,7 @@ OpenID Connect strategy for OmniAuth
 [![Coverage Status](https://coveralls.io/repos/jjbohn/omniauth-openid-connect/badge.png?branch=master)](https://coveralls.io/r/jjbohn/omniauth-openid-connect?branch=master)
 [![Code Climate](https://codeclimate.com/github/jjbohn/omniauth-openid-connect.png)](https://codeclimate.com/github/jjbohn/omniauth-openid-connect)
 
-## Installation
+## 🎆 Installation
 
 Add this line to your application's Gemfile:
 
